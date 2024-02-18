@@ -7,6 +7,7 @@ module.exports = {
   theme: {
     extend: {},
   },
+  experimental: "true",
   darkMode: "class",
   plugins: [
     nextui({
@@ -53,6 +54,10 @@ module.exports = {
                 "0px 0px 30px 0px rgb(0 0 0 / 0.04), 0px 30px 60px 0px rgb(0 0 0 / 0.12), 0px 0px 1px 0px rgb(0 0 0 / 0.3)",
             },
           },
+          colors: {
+            gradient:
+              "linear-gradient(124deg, rgba(255,201,219,1) 0%, rgba(250,219,231,1) 14%, rgba(255,255,255,1) 68%)",
+          },
         },
         dark: {
           layout: {
@@ -69,10 +74,12 @@ module.exports = {
                 "0px 0px 30px 0px rgb(0 0 0 / 0.07), 0px 30px 60px 0px rgb(0 0 0 / 0.26), inset 0px 0px 1px 0px rgb(255 255 255 / 0.15)",
             },
           },
-          // colors: {
-          //   background: "#0D051B",
-          //   foreground: "#ffffff",
-          // },
+
+          colors: {
+            // background: "",
+            background: "gradient-to-r from-cyan-500 to-blue-500 ",
+            // foreground: "#ffffff",
+          },
         },
       },
     }),

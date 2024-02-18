@@ -1,6 +1,8 @@
 import useDarkMode from "use-dark-mode";
 import VideoRecoderPage from "./VideoRecorderPage";
 import { Button, Card, CardBody } from "@nextui-org/react";
+import Preview from "../components/Preview";
+import Topbar from "../components/Topbar";
 
 function App() {
   const darkMode = useDarkMode(false);
@@ -9,23 +11,27 @@ function App() {
     <main
       className={`${
         darkMode.value ? "dark" : ""
-      } text-foreground bg-background`}
+      } text-foreground bg-background w-full h-screen  `}
     >
-      <div className="h-screen w-fit">
+      <Topbar />
+      <div className="">
         abc
         {/* <VideoRecoderPage /> */}
-        <Card className="max-w-[200px]">
-          <CardBody className="px-2 py-4">
-            ABC
-            {/* <video className=""></video> */}
-          </CardBody>
-        </Card>
-        <Card className="max-w-[200px] !important">
-          <CardBody className="px-2 py-4">
-            ABC
-            {/* <video className=""></video> */}
-          </CardBody>
-        </Card>
+        <div className="flex items-center justify-center  ">
+          <Preview
+            link="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+            text={"Left Eye"}
+          />
+          <Preview
+            link={
+              "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+            }
+            text={"Right Eye"}
+          />
+        </div>
+        <div className="flex items-center justify-center m-10">
+          <Button color="primary"> Start</Button>
+        </div>
         <ThemeSwitcher />
       </div>
     </main>
