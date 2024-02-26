@@ -5,7 +5,11 @@ const { nextui } = require("@nextui-org/react");
 module.exports = {
   content: ["./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Avenir", "Helvetica", "Roboto", "system-ui", "Arial"],
+      },
+    },
   },
   experimental: "true",
   darkMode: "class",
@@ -55,8 +59,8 @@ module.exports = {
             },
           },
           colors: {
-            gradient:
-              "linear-gradient(124deg, rgba(255,201,219,1) 0%, rgba(250,219,231,1) 14%, rgba(255,255,255,1) 68%)",
+            // gradient:
+            //   "linear-gradient(124deg, rgba(255,201,219,1) 0%, rgba(250,219,231,1) 14%, rgba(255,255,255,1) 68%)",
           },
         },
         dark: {
@@ -77,7 +81,7 @@ module.exports = {
 
           colors: {
             // background: "",
-            background: "gradient-to-r from-cyan-500 to-blue-500 ",
+            // background: "gradient-to-r from-cyan-500 to-blue-500 ",
             // foreground: "#ffffff",
           },
         },

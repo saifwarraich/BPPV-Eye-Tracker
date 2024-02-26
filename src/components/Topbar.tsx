@@ -18,7 +18,7 @@ export default function Topbar() {
     <Navbar shouldHideOnScroll>
       {/* <NavbarBrand> */}
 
-      <p className="font-bold text-inherit">Saif</p>
+      <p className="font-bold text-inherit">BPPV</p>
       {/* </NavbarBrand> */}
       {/* <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarItem>
