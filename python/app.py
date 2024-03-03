@@ -1,17 +1,104 @@
-from flask import Flask, Response
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 import uvc
 import cv2
+import serial
+import time
+import datetime
 import numpy as np
 from typing import Dict, Tuple
 from pupil_detectors import Detector2D
-
-app = Flask(__name__)
-CORS(app)
+import json
+import math
+from utils.CONSTANST import ACCEL_SENSITIVITY, GYRO_SENSITIVITY
+from flask_socketio import SocketIO
+from threading import Lock
 
 is_streaming_right = False
 is_streaming_left = False
 detector = Detector2D()
+thread = None
+thread_lock = Lock()
+
+app = Flask(__name__)
+CORS(app)
+app.config['SECRET_KEY'] = 'donsky!'
+socketio = SocketIO(app, cors_allowed_origins='*')
+
+def get_current_datetime():
+    now = datetime.now()
+    return now.strftime("%m/%d/%Y %H:%M:%S")
+
+def background_thread():
+    print("Generating random sensor values")
+    while True:
+        ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
+        data = ser.readline()
+        try:
+            data = data.decode('ascii')
+        except UnicodeDecodeError:
+            data = "0 0 0 0 0 0"
+
+        data_split = data.split()
+
+        if len(data_split) >= 6 and data_split[0] != 'ACC_x':
+            raw_accel_x  = float(data_split[0])
+            raw_accel_y  = float(data_split[1])
+            raw_accel_z  = float(data_split[2])
+            raw_gyro_x  = float(data_split[3])
+            raw_gyro_y  = float(data_split[4])
+            raw_gyro_z  = float(data_split[5])
+
+                # Conversion to meaningful units
+            accel_x_g = raw_accel_x / ACCEL_SENSITIVITY
+            accel_y_g = raw_accel_y / ACCEL_SENSITIVITY
+            accel_z_g = raw_accel_z / ACCEL_SENSITIVITY
+            gyro_x_dps = raw_gyro_x / GYRO_SENSITIVITY
+            gyro_y_dps = raw_gyro_y / GYRO_SENSITIVITY
+            gyro_z_dps = raw_gyro_z / GYRO_SENSITIVITY
+
+            # Calculate pitch and roll angles using accelerometer data
+            pitch_rad = math.atan2(accel_x_g, math.sqrt(accel_y_g**2 + accel_z_g**2))
+            roll_rad = math.atan2(accel_y_g, math.sqrt(accel_x_g**2 + accel_z_g**2))
+            
+            # Convert angles from radians to degrees
+            pitch_deg = math.degrees(pitch_rad)
+            roll_deg = math.degrees(roll_rad)
+            
+            # Calculate yaw angle using gyroscope data (simplified integration)
+            delta_time = 1.0  # Example time interval between measurements (seconds)
+            gyro_x_rad = math.radians(gyro_x_dps)
+            yaw_rad = gyro_x_rad * delta_time  # Simplified integration
+            
+            # Convert yaw angle from radians to degrees
+            yaw_deg = math.degrees(yaw_rad)
+
+            position_data = [-1*(pitch_deg+72), roll_deg , yaw_deg]
+    
+            # val =   # Convert to JSON string
+            socketio.emit('updateSensorData', {'value': position_data})
+        socketio.sleep(1)
+
+@socketio.on('connect')
+def connect():
+    global thread
+    print('Client connected')
+
+    global thread
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(background_thread)
+
+"""
+Decorator for disconnect
+"""
+@socketio.on('disconnect')
+def disconnect():
+    print('Client disconnected',  request.sid)
+    global thread
+    with thread_lock:
+        if thread is not None:
+            thread.stop()
 
 @app.route('/test')
 def hello():
@@ -136,7 +223,6 @@ def gen_frame(capture):
     frame_detect_pupil = draw_detector(
             img)
     return frame_detect_pupil
-    
 
 @app.route('/start-video-right')
 def start_video():
@@ -155,4 +241,5 @@ def stop_video():
     return "True"
 
 if __name__ == '__main__':
-    app.run()
+    socketio.run(app)
+    # app.run()
