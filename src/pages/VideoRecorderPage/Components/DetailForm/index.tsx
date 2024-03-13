@@ -5,9 +5,26 @@ import {
   Select,
   SelectItem,
 } from "@nextui-org/react";
-import { GENDERS } from "../../../../utils/Constants";
+import { GENDERS } from "../../../../utils/constants";
+import React from "react";
 
-function DetailForm() {
+interface DetailFormProps {
+  patientName: string;
+  setPatientName: React.Dispatch<React.SetStateAction<string>>;
+  gender: string;
+  setGender: React.Dispatch<React.SetStateAction<string>>;
+  dateOfBirth: string;
+  setDateOfBirth: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function DetailForm({
+  patientName,
+  gender,
+  dateOfBirth,
+  setPatientName,
+  setGender,
+  setDateOfBirth,
+}: DetailFormProps) {
   return (
     <div>
       <Accordion
@@ -29,6 +46,8 @@ function DetailForm() {
               variant="flat"
               isRequired
               className="max-w-xs"
+              value={patientName}
+              onValueChange={setPatientName}
             />
             <Input
               type="date"
@@ -37,8 +56,15 @@ function DetailForm() {
               placeholder="Select Date of Birth"
               isRequired
               className="max-w-xs"
+              value={dateOfBirth}
+              onValueChange={setDateOfBirth}
             />
-            <Select label="Gender" className="max-w-xs">
+            <Select
+              label="Gender"
+              className="max-w-xs"
+              selectedKeys={[gender]}
+              onChange={(e) => setGender(e.target.value)}
+            >
               {GENDERS.map((gender) => (
                 <SelectItem key={gender.value} value={gender.value}>
                   {gender.label}

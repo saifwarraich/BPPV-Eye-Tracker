@@ -4,15 +4,15 @@ import uvc
 import cv2
 import serial
 import time
-import datetime
 import numpy as np
 from typing import Dict, Tuple
 from pupil_detectors import Detector2D
-import json
 import math
 from utils.CONSTANST import ACCEL_SENSITIVITY, GYRO_SENSITIVITY
 from flask_socketio import SocketIO
 from threading import Lock
+import requests
+import json
 
 is_streaming_right = False
 is_streaming_left = False
@@ -23,11 +23,12 @@ thread_lock = Lock()
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = 'donsky!'
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, async_mode="threading", cors_allowed_origins='*')
 
 def get_current_datetime():
-    now = datetime.now()
-    return now.strftime("%m/%d/%Y %H:%M:%S")
+    current_time_seconds = time.time()
+    current_time_milliseconds = int(current_time_seconds * 1000)
+    return current_time_milliseconds
 
 def background_thread():
     print("Generating random sensor values")
@@ -68,15 +69,15 @@ def background_thread():
             # Calculate yaw angle using gyroscope data (simplified integration)
             delta_time = 1.0  # Example time interval between measurements (seconds)
             gyro_x_rad = math.radians(gyro_x_dps)
-            yaw_rad = gyro_x_rad * delta_time  # Simplified integration
+            yaw_rad = gyro_x_rad * delta_time 
             
             # Convert yaw angle from radians to degrees
             yaw_deg = math.degrees(yaw_rad)
 
             position_data = [-1*(pitch_deg+72), roll_deg , yaw_deg]
+            sensor_data = [raw_accel_x, raw_accel_y, raw_accel_z, raw_gyro_x, raw_gyro_y, raw_gyro_z]
     
-            # val =   # Convert to JSON string
-            socketio.emit('updateSensorData', {'value': position_data})
+            socketio.emit('updateSensorData', {'angleValues': position_data, 'sesnorData': sensor_data, 'timestamp': get_current_datetime()})
         socketio.sleep(1)
 
 @socketio.on('connect')
@@ -89,16 +90,38 @@ def connect():
         if thread is None:
             thread = socketio.start_background_task(background_thread)
 
-"""
-Decorator for disconnect
-"""
 @socketio.on('disconnect')
 def disconnect():
     print('Client disconnected',  request.sid)
     global thread
     with thread_lock:
         if thread is not None:
-            thread.stop()
+            thread = None
+
+def join_videos(video1_path, video2_path, output_path):
+    video1 = cv2.VideoCapture(video1_path)
+    video2 = cv2.VideoCapture(video2_path)
+
+    fps = int(video1.get(cv2.CAP_PROP_FPS))
+    width = int(video1.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(video1.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_path, fourcc, fps, (2*width, height))
+
+    while True:
+        ret1, frame1 = video1.read()
+        ret2, frame2 = video2.read()
+
+        if not ret1 or not ret2:
+            break
+        frame2 = cv2.resize(frame2, (width, height))
+        combined_frame = cv2.hconcat([frame1, frame2])
+        out.write(combined_frame)
+
+    video1.release()
+    video2.release()
+    out.release()
+    cv2.destroyAllWindows()
 
 @app.route('/test')
 def hello():
@@ -171,7 +194,7 @@ def generate_frames_right():
         if not is_streaming_right:
             is_streaming_right = True
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter('../public/output_right.mp4', fourcc, 20.0, (192, 192))
+            out = cv2.VideoWriter('./output_right.mp4', fourcc, 20.0, (192, 192))
             while is_streaming_right: 
                 try:
                     frame_to_display = gen_frame(capture=capture)
@@ -198,7 +221,7 @@ def generate_frames_left():
         if not is_streaming_left:
             is_streaming_left = True
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter('../public/output_left.mp4', fourcc, 20.0, (192, 192))
+            out = cv2.VideoWriter('./output_left.mp4', fourcc, 20.0, (192, 192))
             while is_streaming_left: 
                 try:
                     gray_BGR = gen_frame(capture=capture)
@@ -238,7 +261,36 @@ def stop_video():
     if is_streaming_right:
         is_streaming_left = False
         is_streaming_right = False
+        time.sleep(1)
+        join_videos("./output_left.mp4", "./output_right.mp4", "./combined_video.mp4")
     return "True"
+
+@app.route("/save-video", methods=['POST'])
+def save_video():
+    data = request.json
+    data["label"] = json.dumps([i for i in data["label"]])
+    data["headMovementData"] = json.dumps([i for i in data["headMovementData"]])
+    files = {}
+    file_path = "./output_left.mp4"
+    with open(file_path, 'rb') as file:
+        files["leftEyeVideo"] = (file_path, file.read(), 'multipart/form-data')
+    
+    file_path = "./output_right.mp4"
+    with open(file_path, 'rb') as file:
+        files["rightEyeVideo"] = (file_path, file.read(), 'multipart/form-data')
+    
+    file_path = "./combined_video.mp4"
+    with open(file_path, 'rb') as file:
+        files["combinedVideo"] = (file_path, file.read(), 'multipart/form-data')
+    try:
+        response = requests.post("http://localhost:4000/v1/video-detail/", data=data, files=files)
+        if response.status_code != 200:
+            data = response.json()
+            errors = data.get("error")
+            return jsonify(errors), 400
+    except Exception as e:
+        print(e)
+    return "done"
 
 if __name__ == '__main__':
     socketio.run(app)

@@ -1,6 +1,5 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
-import { SerialPort } from "serialport";
 
 // The built directory structure
 //
@@ -67,5 +66,13 @@ app.on("activate", () => {
 });
 
 app.whenReady().then(() => {
+  // const python = spawn("python3", ["../python/app.py"], { shell: true });
+  // python.stdout.on("data", (data: Buffer) => {
+  //   console.log("data: ", data.toString("utf8"));
+  // });
+
+  // python.stderr.on("data", (data: Buffer) => {
+  //   console.log(`stderr: ${data}`); // when error
+  // });
   createWindow();
 });

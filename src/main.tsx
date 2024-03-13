@@ -3,11 +3,14 @@ import ReactDOM from "react-dom/client";
 import App from "./pages/App";
 import "./index.css";
 import { NextUIProvider } from "@nextui-org/react";
+import { LabelTimestampsProvider } from "./Context/useLabelTimeStamp";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <NextUIProvider>
-      <App />
+      <LabelTimestampsProvider>
+        <App />
+      </LabelTimestampsProvider>
     </NextUIProvider>
   </React.StrictMode>
 );

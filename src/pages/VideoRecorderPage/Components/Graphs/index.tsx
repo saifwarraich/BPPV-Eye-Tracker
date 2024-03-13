@@ -44,16 +44,13 @@ const Graphs = ({ data }: GraphsProps) => {
   });
 
   useEffect(() => {
-    console.log("Data Length::", data);
     if (data) {
-      console.log("Setting Data ", data);
       setX_deg(data[0]);
       setY_deg(data[1]);
       setZ_deg(data[2]);
     }
   }, [data]);
 
-  console.log("x_deg, y_deg, z_Def::", x_deg, y_deg, z_deg);
   useEffect(() => {
     setXData((prev) => {
       return {
