@@ -23,7 +23,7 @@ thread_lock = Lock()
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = 'donsky!'
-socketio = SocketIO(app, async_mode="threading", cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 def get_current_datetime():
     current_time_seconds = time.time()
@@ -35,11 +35,12 @@ def background_thread():
     while True:
         ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
         data = ser.readline()
+        print("data")
         try:
             data = data.decode('ascii')
         except UnicodeDecodeError:
             data = "0 0 0 0 0 0"
-
+        print("here")
         data_split = data.split()
 
         if len(data_split) >= 6 and data_split[0] != 'ACC_x':
@@ -77,7 +78,7 @@ def background_thread():
             position_data = [-1*(pitch_deg+72), roll_deg , yaw_deg]
             sensor_data = [raw_accel_x, raw_accel_y, raw_accel_z, raw_gyro_x, raw_gyro_y, raw_gyro_z]
     
-            socketio.emit('updateSensorData', {'angleValues': position_data, 'sesnorData': sensor_data, 'timestamp': get_current_datetime()})
+            socketio.emit('updateSensorData', {'angleValues': position_data, 'sensorData': sensor_data, 'timestamp': get_current_datetime()})
         socketio.sleep(1)
 
 @socketio.on('connect')

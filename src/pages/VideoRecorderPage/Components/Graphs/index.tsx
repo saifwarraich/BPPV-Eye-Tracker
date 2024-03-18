@@ -43,6 +43,8 @@ const Graphs = ({ data }: GraphsProps) => {
     },
   });
 
+  // console.log(zdata);
+
   useEffect(() => {
     if (data) {
       setX_deg(data[0]);

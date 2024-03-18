@@ -1,4 +1,4 @@
-import { Key, useCallback, useEffect } from "react";
+import { Key, useCallback } from "react";
 import {
   Table,
   TableHeader,
@@ -45,11 +45,11 @@ export default function AnnotationList({ videoStart }: AnnotationListProps) {
         case "actions":
           return (
             <div className="relative flex items-center gap-2">
-              <Tooltip content="Edit Label">
+              {/* <Tooltip content="Edit Label">
                 <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
                   <EditIcon />
                 </span>
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip color="danger" content="Delete user">
                 <span
                   className="text-lg text-danger cursor-pointer active:opacity-50"

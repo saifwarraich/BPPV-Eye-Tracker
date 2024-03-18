@@ -22,7 +22,7 @@ import { saveVideoDetail } from "../../services/videoService";
 
 interface HeadMovementDataType {
   timestamp: number;
-  sesnorData: number[];
+  sensorData: number[];
   angleValues: number[];
 }
 
@@ -78,6 +78,7 @@ function VideoRecoderPage() {
     setLabelTimestamps([]);
     setStartTime(0);
     setStartAnnotatingTime(null);
+    setHeadMovementData([]);
   };
 
   const saveData = async () => {
@@ -116,12 +117,14 @@ function VideoRecoderPage() {
       );
       socket.connect();
       socket.on("updateSensorData", (data) => {
-        if (headMovementData?.length)
-          setHeadMovementData([...headMovementData, data]);
-        else setHeadMovementData([data]);
+        setHeadMovementData((prev) => [...prev, data]);
+        // if (headMovementData?.length)
+        //   setHeadMovementData([...headMovementData, data]);
+        // else setHeadMovementData([data]);
         setGraphData(data.angleValues);
       });
       setStartTime(Date.now());
+
       setIsOpen(true);
     } else {
       setImageDataLeft("");
@@ -134,6 +137,10 @@ function VideoRecoderPage() {
       }
     }
   };
+
+  useEffect(() => {
+    console.log("head ::", headMovementData);
+  }, [headMovementData]);
 
   return (
     <>

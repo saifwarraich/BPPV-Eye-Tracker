@@ -11,7 +11,7 @@ export interface IVideoDetailPayload {
   }>;
   headMovementData: {
     timestamp: number;
-    sesnorData: number[];
+    sensorData: number[];
     angleValues: number[];
   }[];
   videoStartTime: number;

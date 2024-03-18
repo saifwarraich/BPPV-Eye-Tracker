@@ -1,6 +1,5 @@
-import { Card, CardFooter, Image, Button, CardBody } from "@nextui-org/react";
-import { useEffect, useState } from "react";
-import ReactPlayer from "react-player/lazy";
+import { Card, CardFooter, Image, CardBody } from "@nextui-org/react";
+import { useEffect } from "react";
 import { styled } from "styled-components";
 
 const StyledCard = styled(Card)`
@@ -24,7 +23,7 @@ interface PreviewProps {
   label: string;
 }
 
-export default function VideoPlayer({ imageData, label, eye }: PreviewProps) {
+export default function VideoPlayer({ imageData, label }: PreviewProps) {
   useEffect(() => {
     console.log(imageData);
   }, []);
