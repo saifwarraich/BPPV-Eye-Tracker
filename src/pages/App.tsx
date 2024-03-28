@@ -1,28 +1,22 @@
 import useDarkMode from "use-dark-mode";
 import VideoRecoderPage from "./VideoRecorderPage";
 import Topbar from "../components/Topbar";
+import { useEffect } from "react";
+import { useVideos } from "../Context/VideoContext";
 // import { listSerialPorts } from "../../electron/renderer/serialPort";
 
 function App() {
   const darkMode = useDarkMode(false);
 
-  // useEffect(() => {
-  //   // listSerialPorts();
-  //   // Listen for 'message' event
-  //   // socket.connect();
-  //   // console.log("Connected");
-  //   // socket.on("updateSensorData", (data) => {
-  //   //   console.log("Here");
-  //   //   console.log("Received message:", data);
-  //     // Update your React component state with the received data
-  //   });
-  //   // Clean up function
-  //   // return () => {
-  //   //   // socket.off("message");
-  //   //   // Disconnect the socket when the component unmounts
-  //   //   // socket.disconnect();
-  //   // };
-  // }, []);
+  const { getVideosDetail, videoDetails } = useVideos();
+
+  useEffect(() => {
+    getVideosDetail();
+  }, []);
+
+  useEffect(() => {
+    console.log(videoDetails);
+  }, [videoDetails]);
 
   return (
     <>

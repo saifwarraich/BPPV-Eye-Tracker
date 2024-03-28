@@ -5,11 +5,13 @@ export const ENVIRONMENT: ENVIRONMENT_TYPE =
 
 const CONFIG = {
   url: {
-    development: "http://127.0.0.1:5000/",
+    development: "http://localhost:4000",
     production: "",
   },
-  api: {
+  pythonUrl: "http://127.0.0.1:5000/",
+  endpoints: {
     SAVE_VIDEO: "/save-video",
+    GET_ALL_VIDEOS_DETAIL: "/v1/video-detail/",
   },
 };
 
