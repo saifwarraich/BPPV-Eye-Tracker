@@ -5,13 +5,16 @@ import "./index.css";
 import { NextUIProvider } from "@nextui-org/react";
 import { LabelTimestampsProvider } from "./Context/useLabelTimeStamp";
 import { VideosContextProvider } from "./Context/VideoContext";
+import { VideoModeContextProvider } from "./Context/VideoModeContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <NextUIProvider>
       <LabelTimestampsProvider>
         <VideosContextProvider>
-          <App />
+          <VideoModeContextProvider>
+            <App />
+          </VideoModeContextProvider>
         </VideosContextProvider>
       </LabelTimestampsProvider>
     </NextUIProvider>

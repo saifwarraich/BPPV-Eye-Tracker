@@ -13,6 +13,8 @@ from flask_socketio import SocketIO
 from threading import Lock
 import requests
 import json
+import subprocess
+import os
 
 is_streaming_right = False
 is_streaming_left = False
@@ -98,6 +100,15 @@ def disconnect():
     with thread_lock:
         if thread is not None:
             thread = None
+
+def remove_video_files():
+    current_dir = os.getcwd()
+
+    for filename in os.listdir(current_dir):
+        if filename.endswith(".mp4"):
+            filepath = os.path.join(current_dir, filename)
+            os.remove(filepath)
+
 
 def join_videos(video1_path, video2_path, output_path):
     video1 = cv2.VideoCapture(video1_path)
@@ -195,7 +206,7 @@ def generate_frames_right():
         if not is_streaming_right:
             is_streaming_right = True
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter('./output_right.mp4', fourcc, 20.0, (192, 192))
+            out = cv2.VideoWriter('./output_right_t.mp4', fourcc, 20.0, (192, 192))
             while is_streaming_right: 
                 try:
                     frame_to_display = gen_frame(capture=capture)
@@ -222,7 +233,7 @@ def generate_frames_left():
         if not is_streaming_left:
             is_streaming_left = True
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter('./output_left.mp4', fourcc, 20.0, (192, 192))
+            out = cv2.VideoWriter('./output_left_t.mp4', fourcc, 20.0, (192, 192))
             while is_streaming_left: 
                 try:
                     gray_BGR = gen_frame(capture=capture)
@@ -250,6 +261,7 @@ def gen_frame(capture):
 
 @app.route('/start-video-right')
 def start_video():
+    remove_video_files()
     return Response(generate_frames_right(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/start-video-left')
@@ -263,7 +275,15 @@ def stop_video():
         is_streaming_left = False
         is_streaming_right = False
         time.sleep(1)
-        join_videos("./output_left.mp4", "./output_right.mp4", "./combined_video.mp4")
+        join_videos("./output_left_t.mp4", "./output_right_t.mp4", "./combined_video_t.mp4")
+        commands = [
+            ['ffmpeg', '-i', 'combined_video_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'combined_video.mp4'],
+            ['ffmpeg', '-i', 'output_left_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_left.mp4'],
+            ['ffmpeg', '-i', 'output_right_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_right.mp4']
+        ]
+        for command in commands:
+            subprocess.run(command)
+        time.sleep(3)
     return "True"
 
 @app.route("/save-video", methods=['POST'])

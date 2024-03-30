@@ -15,7 +15,7 @@ itsdangerous==2.1.2
 Jinja2==3.1.3
 MarkupSafe==2.1.5
 numpy==1.26.4
-opencv-python==4.9.0.80
+# opencv-python==4.9.0.80
 pupil_detectors==2.0.2
 # pupil_labs_uvc @ file:///app/pyuvc
 python-engineio==4.9.0

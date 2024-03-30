@@ -17,8 +17,18 @@ import { ChevronDownIcon } from "../../assets/ChevronDownIcon";
 import AnnotationList from "./Components/AnnotationList";
 import { InformationIcon } from "../../assets/informationIcon";
 import { useLabelTimestamps } from "../../Context/useLabelTimeStamp";
-import { AnnotationListDiv, FixedButton, FixedDiv, MenueCard } from "./Styles";
+import {
+  AnnotationListDiv,
+  FixedButton,
+  FixedDiv,
+  MenueCard,
+  CenterDiv,
+  WidthDiv,
+} from "./Styles";
 import { saveVideoDetail } from "../../services/videoService";
+import ReactPlayer from "react-player";
+import VideoDataList from "./Components/VideoDataList";
+import randomData from "../../utils/pdata";
 
 interface HeadMovementDataType {
   timestamp: number;
@@ -153,7 +163,18 @@ function VideoRecoderPage() {
           dateOfBirth={dateOfBirth}
           setDateOfBirth={setDateOfBirth}
         />
-        <div className="flex items-center justify-center">
+        <CenterDiv>
+          <WidthDiv>
+            <VideoDataList data={randomData} />
+          </WidthDiv>
+        </CenterDiv>
+        {/* <ReactPlayer
+          url={
+            "http://localhost:4000/v1/video-detail/get-video?path=/home/saif/Documents/github/BPPV-electron/BPPV-backend/src/config/videos/combinedVideo-1711773360399.mp4"
+          }
+          controls
+        /> */}
+        <CenterDiv>
           <VideoPlayer
             eye="right"
             label={"Right Eye"}
@@ -164,8 +185,8 @@ function VideoRecoderPage() {
             label={"Left Eye"}
             imageData={imageDataLeft}
           />
-        </div>
-        <div className="flex items-center justify-center">
+        </CenterDiv>
+        <CenterDiv>
           <Button
             color={imageDataLeft ? "danger" : "primary"}
             variant="shadow"
@@ -193,7 +214,7 @@ function VideoRecoderPage() {
               </Button>
             </Tooltip>
           )}
-        </div>
+        </CenterDiv>
         <Graphs data={graphData} />
 
         <FixedDiv>

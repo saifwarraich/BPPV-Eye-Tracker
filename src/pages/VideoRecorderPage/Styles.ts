@@ -30,3 +30,13 @@ export const AnnotationListDiv = styled.div`
   flex-direction: column;
   align-items: flex-end;
 `;
+
+export const CenterDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const WidthDiv = styled.div`
+  width: 700px;
+`;

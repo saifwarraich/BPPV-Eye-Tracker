@@ -11,3 +11,7 @@ export function getTimeDifference(startTime: number, endTime: number) {
 
   return `${hours}:${minutes}:${seconds}`;
 }
+
+export function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
