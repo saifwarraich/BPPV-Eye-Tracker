@@ -9,6 +9,7 @@ import { GENDERS } from "../../../../utils/constants";
 import React from "react";
 
 interface DetailFormProps {
+  isDisabled: boolean;
   patientName: string;
   setPatientName: React.Dispatch<React.SetStateAction<string>>;
   gender: string;
@@ -18,6 +19,7 @@ interface DetailFormProps {
 }
 
 function DetailForm({
+  isDisabled,
   patientName,
   gender,
   dateOfBirth,
@@ -28,6 +30,7 @@ function DetailForm({
   return (
     <div>
       <Accordion
+        isDisabled={isDisabled}
         variant="shadow"
         itemClasses={{
           titleWrapper: "flex-none",

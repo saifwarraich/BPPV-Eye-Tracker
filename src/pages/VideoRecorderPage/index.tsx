@@ -27,8 +27,9 @@ import {
 } from "./Styles";
 import { saveVideoDetail } from "../../services/videoService";
 import ReactPlayer from "react-player";
-import VideoDataList from "./Components/VideoDataList";
 import randomData from "../../utils/pdata";
+import { useVideoMode } from "../../Context/VideoModeContext";
+import VideoDataList from "./Components/VideoDataList";
 
 interface HeadMovementDataType {
   timestamp: number;
@@ -54,6 +55,7 @@ function VideoRecoderPage() {
   const [patientName, setPatientName] = useState("");
   const [gender, setGender] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const { isLive } = useVideoMode();
 
   const toggleCard = () => {
     setIsAnnotationListOpen(false);
@@ -156,6 +158,7 @@ function VideoRecoderPage() {
     <>
       <div className="min-h-fit !important">
         <DetailForm
+          isDisabled={!isLive}
           patientName={patientName}
           setPatientName={setPatientName}
           gender={gender}
@@ -163,61 +166,72 @@ function VideoRecoderPage() {
           dateOfBirth={dateOfBirth}
           setDateOfBirth={setDateOfBirth}
         />
-        <CenterDiv>
-          <WidthDiv>
-            <VideoDataList data={randomData} />
-          </WidthDiv>
-        </CenterDiv>
         {/* <ReactPlayer
           url={
             "http://localhost:4000/v1/video-detail/get-video?path=/home/saif/Documents/github/BPPV-electron/BPPV-backend/src/config/videos/combinedVideo-1711773360399.mp4"
           }
           controls
         /> */}
-        <CenterDiv>
-          <VideoPlayer
-            eye="right"
-            label={"Right Eye"}
-            imageData={imageDataRight}
-          />
-          <VideoPlayer
-            eye={"left"}
-            label={"Left Eye"}
-            imageData={imageDataLeft}
-          />
-        </CenterDiv>
-        <CenterDiv>
-          <Button
-            color={imageDataLeft ? "danger" : "primary"}
-            variant="shadow"
-            onClick={manageStream}
-            isDisabled={
-              !!startTime && !imageDataLeft && labelTimestamps.length > 0
-            }
-          >
-            {imageDataLeft ? "Stop" : "Start"}
-          </Button>
-          {!!startTime && !imageDataLeft && labelTimestamps.length > 0 && (
-            <Tooltip
-              showArrow
-              placement="right"
-              content={"Save or Reset existing record first"}
-            >
+        {!isLive ? (
+          <CenterDiv>
+            <WidthDiv>
+              <VideoDataList videoStart={Date.now()} />
+            </WidthDiv>
+          </CenterDiv>
+        ) : (
+          ""
+        )}
+        {isLive ? (
+          <>
+            <CenterDiv>
+              <VideoPlayer
+                eye="right"
+                label={"Right Eye"}
+                imageData={imageDataRight}
+              />
+              <VideoPlayer
+                eye={"left"}
+                label={"Left Eye"}
+                imageData={imageDataLeft}
+              />
+            </CenterDiv>
+            <CenterDiv>
               <Button
-                isIconOnly
-                size="sm"
-                radius="full"
-                variant="flat"
-                className="p-2 ml-2 w-1 h-8"
+                color={imageDataLeft ? "danger" : "primary"}
+                variant="shadow"
+                onClick={manageStream}
+                isDisabled={
+                  !!startTime && !imageDataLeft && labelTimestamps.length > 0
+                }
               >
-                <InformationIcon />
+                {imageDataLeft ? "Stop" : "Start"}
               </Button>
-            </Tooltip>
-          )}
-        </CenterDiv>
+              {!!startTime && !imageDataLeft && labelTimestamps.length > 0 && (
+                <Tooltip
+                  showArrow
+                  placement="right"
+                  content={"Save or Reset existing record first"}
+                >
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    className="p-2 ml-2 w-1 h-8"
+                  >
+                    <InformationIcon />
+                  </Button>
+                </Tooltip>
+              )}
+            </CenterDiv>
+          </>
+        ) : (
+          ""
+        )}
+
         <Graphs data={graphData} />
 
-        <FixedDiv>
+        <FixedDiv hidden={!isLive}>
           <ButtonGroup>
             <Tooltip content="Save annotations and video database">
               <Button

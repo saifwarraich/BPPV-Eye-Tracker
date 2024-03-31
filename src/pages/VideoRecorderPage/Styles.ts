@@ -1,7 +1,11 @@
 import { Card } from "@nextui-org/react";
 import { styled } from "styled-components";
 
-export const FixedDiv = styled.div`
+interface FixedDivProps {
+  hidden?: boolean;
+}
+
+export const FixedDiv = styled.div<FixedDivProps>`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -11,6 +15,7 @@ export const FixedDiv = styled.div`
   margin-right: 1rem;
   right: 0;
   bottom: 0;
+  visibility: ${(props) => (props.hidden ? "hidden" : "visible")};
 `;
 
 export const FixedButton = styled.div`
@@ -38,5 +43,6 @@ export const CenterDiv = styled.div`
 `;
 
 export const WidthDiv = styled.div`
+  margin-top: 15px;
   width: 700px;
 `;

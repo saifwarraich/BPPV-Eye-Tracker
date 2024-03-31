@@ -4,9 +4,9 @@ export const VerticalDotsIcon = ({
   height,
   ...props
 }: {
-  size: number;
-  width: number;
-  height: number;
+  size?: number;
+  width?: number;
+  height?: number;
 }) => (
   <svg
     aria-hidden="true"
