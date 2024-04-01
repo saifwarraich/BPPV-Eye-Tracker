@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 import VideoPlayer from "./Components/VideoPlayer";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DetailForm from "./Components/DetailForm";
 import Graphs from "./Components/Graphs";
 import { socket } from "../../socket";
@@ -24,12 +24,14 @@ import {
   MenueCard,
   CenterDiv,
   WidthDiv,
+  ReactPlayerContainer,
+  BackButtonContainer,
 } from "./Styles";
-import { saveVideoDetail } from "../../services/videoService";
+import { getSingleVideo, saveVideoDetail } from "../../services/videoService";
 import ReactPlayer from "react-player";
-import randomData from "../../utils/pdata";
 import { useVideoMode } from "../../Context/VideoModeContext";
 import VideoDataList from "./Components/VideoDataList";
+import { VideoDetailType } from "../../Context/VideoContext";
 
 interface HeadMovementDataType {
   timestamp: number;
@@ -55,7 +57,11 @@ function VideoRecoderPage() {
   const [patientName, setPatientName] = useState("");
   const [gender, setGender] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const { isLive } = useVideoMode();
+  const videoDivRef = useRef<HTMLDivElement>(null);
+  const videoPlayerRef = useRef<ReactPlayer>(null);
+  const accordianDivRef = useRef<HTMLDivElement>(null);
 
   const toggleCard = () => {
     setIsAnnotationListOpen(false);
@@ -68,23 +74,46 @@ function VideoRecoderPage() {
   };
 
   const toggleAnnotating = () => {
-    if (!starAnnotatingTime) {
-      setStartAnnotatingTime(Date.now());
+    if (isLive) {
+      if (!starAnnotatingTime) {
+        setStartAnnotatingTime(Date.now());
+      } else {
+        setLabelTimestamps([
+          ...labelTimestamps,
+          {
+            id:
+              Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            start: starAnnotatingTime,
+            end: Date.now(),
+            label: bppvTypeSelected ? bppvTypeSelected : BPPV_TYPES[0].value,
+          },
+        ]);
+        setStartAnnotatingTime(null);
+        setBppvTypeSelected("");
+      }
     } else {
-      setLabelTimestamps([
-        ...labelTimestamps,
-        {
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-          start: starAnnotatingTime,
-          end: Date.now(),
-          label: bppvTypeSelected ? bppvTypeSelected : BPPV_TYPES[0].value,
-        },
-      ]);
-      setStartAnnotatingTime(null);
-      setBppvTypeSelected("");
+      if (videoPlayerRef.current) {
+        const milSecPlayed = 1000 * videoPlayerRef.current?.getCurrentTime();
+        if (!starAnnotatingTime) {
+          setStartAnnotatingTime(milSecPlayed + startTime);
+        } else {
+          setLabelTimestamps([
+            ...labelTimestamps,
+            {
+              id:
+                Date.now().toString(36) +
+                Math.random().toString(36).slice(2, 7),
+              start: starAnnotatingTime,
+              end: milSecPlayed + startTime,
+              label: bppvTypeSelected ? bppvTypeSelected : BPPV_TYPES[0].value,
+            },
+          ]);
+          setStartAnnotatingTime(null);
+          setBppvTypeSelected("");
+        }
+      }
     }
   };
-
   const resetData = () => {
     if (imageDataLeft) manageStream();
     setLabelTimestamps([]);
@@ -111,6 +140,22 @@ function VideoRecoderPage() {
     }
   };
 
+  const setVideoDetailOnClick = (videoDetail: VideoDetailType) => {
+    setVideoUrl(getSingleVideo(videoDetail.combinedVideo));
+
+    setGender(videoDetail.gender ?? "");
+    setDateOfBirth(videoDetail.dateOfBirth ?? "");
+    setPatientName(videoDetail.patientName);
+    setLabelTimestamps(videoDetail.label);
+    setStartTime(videoDetail.videoStartTime);
+    if (accordianDivRef.current) accordianDivRef.current.click();
+    if (videoDivRef.current)
+      videoDivRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+  };
+
   useEffect(() => {
     return () => {
       setImageDataLeft("");
@@ -130,9 +175,6 @@ function VideoRecoderPage() {
       socket.connect();
       socket.on("updateSensorData", (data) => {
         setHeadMovementData((prev) => [...prev, data]);
-        // if (headMovementData?.length)
-        //   setHeadMovementData([...headMovementData, data]);
-        // else setHeadMovementData([data]);
         setGraphData(data.angleValues);
       });
       setStartTime(Date.now());
@@ -150,37 +192,57 @@ function VideoRecoderPage() {
     }
   };
 
-  useEffect(() => {
-    console.log("head ::", headMovementData);
-  }, [headMovementData]);
-
   return (
     <>
       <div className="min-h-fit !important">
-        <DetailForm
-          isDisabled={!isLive}
-          patientName={patientName}
-          setPatientName={setPatientName}
-          gender={gender}
-          setGender={setGender}
-          dateOfBirth={dateOfBirth}
-          setDateOfBirth={setDateOfBirth}
-        />
-        {/* <ReactPlayer
-          url={
-            "http://localhost:4000/v1/video-detail/get-video?path=/home/saif/Documents/github/BPPV-electron/BPPV-backend/src/config/videos/combinedVideo-1711773360399.mp4"
-          }
-          controls
-        /> */}
+        <div ref={accordianDivRef}>
+          <DetailForm
+            isDisabled={!isLive && !Boolean(videoUrl.length)}
+            patientName={patientName}
+            setPatientName={setPatientName}
+            gender={gender}
+            setGender={setGender}
+            dateOfBirth={dateOfBirth}
+            setDateOfBirth={setDateOfBirth}
+          />
+        </div>
+
         {!isLive ? (
-          <CenterDiv>
-            <WidthDiv>
-              <VideoDataList videoStart={Date.now()} />
-            </WidthDiv>
-          </CenterDiv>
+          <div>
+            <CenterDiv>
+              <WidthDiv>
+                <VideoDataList
+                  videoStart={Date.now()}
+                  setVideoUrl={setVideoDetailOnClick}
+                />
+              </WidthDiv>
+            </CenterDiv>
+            <CenterDiv>
+              <ReactPlayerContainer ref={videoDivRef}>
+                <BackButtonContainer>
+                  <Button
+                    size="sm"
+                    variant="shadow"
+                    color="default"
+                    radius="full"
+                  >
+                    ↩ close
+                  </Button>
+                </BackButtonContainer>
+                <ReactPlayer
+                  ref={videoPlayerRef}
+                  url={videoUrl}
+                  width={800}
+                  height={400}
+                  controls
+                />
+              </ReactPlayerContainer>
+            </CenterDiv>
+          </div>
         ) : (
           ""
         )}
+
         {isLive ? (
           <>
             <CenterDiv>
@@ -231,7 +293,7 @@ function VideoRecoderPage() {
 
         <Graphs data={graphData} />
 
-        <FixedDiv hidden={!isLive}>
+        <FixedDiv hidden={!isLive && !Boolean(videoUrl.length)}>
           <ButtonGroup>
             <Tooltip content="Save annotations and video database">
               <Button
@@ -316,7 +378,7 @@ function VideoRecoderPage() {
                   <Button
                     size="sm"
                     radius="full"
-                    isDisabled={!imageDataLeft}
+                    isDisabled={!imageDataLeft && !Boolean(videoUrl.length)}
                     color={starAnnotatingTime ? "danger" : "default"}
                     onClick={toggleAnnotating}
                   >

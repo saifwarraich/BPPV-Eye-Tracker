@@ -13,3 +13,7 @@ export const getVideosDetailReq = async (): Promise<VideoDetailType[]> => {
   const res = await axios.get(url);
   return res.data;
 };
+
+export const getSingleVideo = (path: string): string => {
+  return `${CONFIG.url[ENVIRONMENT]}${CONFIG.endpoints.GET_SINGLE_VIDEO}?path=${path}`;
+};

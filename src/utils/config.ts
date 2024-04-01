@@ -12,6 +12,7 @@ const CONFIG = {
   endpoints: {
     SAVE_VIDEO: "/save-video",
     GET_ALL_VIDEOS_DETAIL: "/v1/video-detail/",
+    GET_SINGLE_VIDEO: "/v1/video-detail/get-video",
   },
 };
 

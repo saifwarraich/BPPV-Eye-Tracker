@@ -15,20 +15,22 @@ import {
   Pagination,
 } from "@nextui-org/react";
 import { capitalize } from "../../../../utils/utils";
-import { VerticalDotsIcon } from "../../../../assets/VerticleDotsIcon";
-import randomData from "../../../../utils/pdata";
 import { BPPV_TYPES } from "../../../../utils/constants";
 import { SearchIcon } from "../../../../assets/SearchIcon";
 import { ChevronDownIcon } from "../../../../assets/ChevronDownIcon";
-import { PlusIcon } from "../../../../assets/PlusIcon";
 import { DeleteIcon } from "../../../../assets/Delete";
 import { CameraIcon } from "../../../../assets/CameraIcon";
+import { VideoDetailType, useVideos } from "../../../../Context/VideoContext";
 
 interface AnnotationListProps {
   videoStart: number;
+  setVideoUrl: (videoDetail: VideoDetailType) => void;
 }
 
-export default function VideoDataList({ videoStart }: AnnotationListProps) {
+export default function VideoDataList({
+  videoStart,
+  setVideoUrl,
+}: AnnotationListProps) {
   const columns = [
     { name: "NAME", uid: "name", sortable: true },
     { name: "GENDER", uid: "gender", sortable: true },
@@ -36,12 +38,13 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
     { name: "ACTIONS", uid: "actions" },
   ];
 
+  const { videoDetails, getVideosDetail } = useVideos();
+
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState("");
   const [visibleColumns, setVisibleColumns] = useState("all");
   const [bppvTypeFilter, setBPPVTypeFilter] = useState("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [deleteDisabled, setDeleteDisabled] = useState(false);
   const [sortDescriptor, setSortDescriptor] = useState({
     column: "age",
     direction: "ascending",
@@ -59,7 +62,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
   }, [visibleColumns]);
 
   const filteredItems = useMemo(() => {
-    let filteredUsers = [...randomData];
+    let filteredUsers = [...videoDetails];
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
@@ -77,7 +80,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
     }
 
     return filteredUsers;
-  }, [randomData, filterValue, bppvTypeFilter]);
+  }, [videoDetails, filterValue, bppvTypeFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -100,46 +103,46 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
 
   // const { labelTimestamps, removeLabelTimestamp } = useLabelTimestamps();
 
-  const renderCell = useCallback(
-    (item: (typeof randomData)[0], columnKey: Key) => {
-      switch (columnKey) {
-        case "name":
-          return item.patientName;
-        case "gender":
-          return item.gender;
-        case "labels":
-          return (
-            <Dropdown>
-              <DropdownTrigger>
-                <Button variant="bordered" size="sm" radius="full">
-                  Labels
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Example with disabled actions"
-                disabledKeys={["disable"]}
-              >
-                {item.label.map((label) => (
-                  <DropdownItem key={"disable"}>
-                    {BPPV_TYPES.find((a) => a.value === label.label)?.label}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-          );
-        case "actions":
-          return (
-            <div className="flex justify-between">
-              <Button
-                size="sm"
-                // variant="bordered"
-                color="warning"
-                radius="full"
-                startContent={<CameraIcon />}
-              >
-                Video
+  const renderCell = useCallback((item: VideoDetailType, columnKey: Key) => {
+    switch (columnKey) {
+      case "name":
+        return item.patientName;
+      case "gender":
+        return item.gender;
+      case "labels":
+        return (
+          <Dropdown>
+            <DropdownTrigger>
+              <Button variant="shadow" size="sm" radius="full">
+                Labels
               </Button>
-              <div className="relative flex justify-end items-center">
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Example with disabled actions"
+              disabledKeys={["disable"]}
+            >
+              {item.label.map((label) => (
+                <DropdownItem key={"disable"}>
+                  {BPPV_TYPES.find((a) => a.value === label.label)?.label}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+        );
+      case "actions":
+        return (
+          <div className="flex justify-between">
+            <Button
+              size="sm"
+              variant="shadow"
+              color="warning"
+              radius="full"
+              startContent={<CameraIcon />}
+              onClick={() => setVideoUrl(item)}
+            >
+              Video
+            </Button>
+            {/* <div className="relative flex justify-end items-center">
                 <Dropdown>
                   <DropdownTrigger>
                     <Button isIconOnly size="sm" variant="light">
@@ -152,15 +155,13 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
                     <DropdownItem>Delete</DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
-              </div>
-            </div>
-          );
-        default:
-          return "";
-      }
-    },
-    []
-  );
+              </div> */}
+          </div>
+        );
+      default:
+        return "";
+    }
+  }, []);
 
   const onNextPage = useCallback(() => {
     if (page < pages) {
@@ -260,7 +261,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">
-            Total {randomData.length} users
+            Total {videoDetails.length} users
           </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
@@ -281,7 +282,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
     bppvTypeFilter,
     visibleColumns,
     onRowsPerPageChange,
-    randomData.length,
+    videoDetails.length,
     onSearchChange,
     hasSearchFilter,
     selectedKeys,
@@ -293,7 +294,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
         <span className="w-[30%] text-small text-default-400">
           {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+            : `${selectedKeys.size ?? 0} of ${filteredItems.length} selected`}
         </span>
         <Pagination
           isCompact
@@ -304,22 +305,14 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
           total={pages}
           onChange={setPage}
         />
-        <div className="hidden sm:flex w-[30%] justify-end gap-2">
+        <div className="sm:flex w-[30%] justify-end gap-2">
           <Button
             isDisabled={pages === 1}
             size="sm"
             variant="flat"
-            onPress={onPreviousPage}
+            onPress={getVideosDetail}
           >
-            Previous
-          </Button>
-          <Button
-            isDisabled={pages === 1}
-            size="sm"
-            variant="flat"
-            onPress={onNextPage}
-          >
-            Next
+            🗘 Refresh
           </Button>
         </div>
       </div>
@@ -352,7 +345,7 @@ export default function VideoDataList({ videoStart }: AnnotationListProps) {
       </TableHeader>
       <TableBody emptyContent={"No users found"} items={sortedItems}>
         {(item) => (
-          <TableRow key={item.id}>
+          <TableRow key={item._id}>
             {(columnKey) => (
               <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}

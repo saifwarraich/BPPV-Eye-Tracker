@@ -5,7 +5,7 @@ export interface VideoDetailType {
   _id: string;
   patientName: string;
   dateOfBirth?: string;
-  gernder?: string;
+  gender?: string;
   label: {
     id: string;
     start: number;
