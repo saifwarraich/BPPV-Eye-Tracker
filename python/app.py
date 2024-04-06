@@ -34,7 +34,7 @@ def get_current_datetime():
 
 def background_thread():
     print("Generating random sensor values")
-    while True:
+    while thread:
         ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
         data = ser.readline()
         print("data")
