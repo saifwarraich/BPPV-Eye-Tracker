@@ -1,7 +1,8 @@
 {
-  "name": "bppv",
+  "name": "BPPV",
   "private": true,
   "version": "0.0.0",
+  "icon": "src/assets/camera.png",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",

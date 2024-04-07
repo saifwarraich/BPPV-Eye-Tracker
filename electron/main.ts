@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from "electron";
+import { exec } from "child_process";
 import path from "node:path";
 
 // The built directory structure
@@ -18,13 +19,17 @@ process.env.VITE_PUBLIC = app.isPackaged
 let win: BrowserWindow | null;
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+console.log(VITE_DEV_SERVER_URL);
 
 function createWindow() {
+  console.log(process.env.VITE_PUBLIC);
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "camera.png"),
     width: 1024,
     height: 768,
     minWidth: 1024,
+    title: "BPPV",
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -64,6 +69,25 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+app.on("before-quit", () => {
+  exec(
+    "bash /home/ntnu/Documents/bppv-scripts/kill.sh",
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing shell script: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`Shell script stderr: ${stderr}`);
+        return;
+      }
+      console.log(`Shell script stdout: ${stdout}`);
+    }
+  );
+});
+
+app.setName("BPPV");
 
 app.whenReady().then(() => {
   // const python = spawn("python3", ["../python/app.py"], { shell: true });

@@ -26,4 +26,4 @@ python/bppv-python
 *.sln
 *.sw?
 
-
+**/*.mp4
