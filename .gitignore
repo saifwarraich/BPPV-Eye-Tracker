@@ -16,6 +16,7 @@ release
 python/bppv-python
 
 # Editor directories and files
+**/*.mp4
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -25,5 +26,3 @@ python/bppv-python
 *.njsproj
 *.sln
 *.sw?
-
-**/*.mp4
