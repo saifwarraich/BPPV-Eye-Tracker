@@ -24,14 +24,19 @@ import {
   MenueCard,
   CenterDiv,
   WidthDiv,
-  ReactPlayerContainer,
-  BackButtonContainer,
 } from "./Styles";
-import { getSingleVideo, saveVideoDetail } from "../../services/videoService";
+import {
+  deleteVideoService,
+  getSingleVideoService,
+  saveVideoDetailService,
+  updateVideoDetailService,
+} from "../../services/videoService";
 import ReactPlayer from "react-player";
 import { useVideoMode } from "../../Context/VideoModeContext";
 import VideoDataList from "./Components/VideoDataList";
-import { VideoDetailType } from "../../Context/VideoContext";
+import { VideoDetailType, useVideos } from "../../Context/VideoContext";
+import { IUpdateVideoDetailPayload } from "../../utils/schema/video";
+import OfflineVideoPlayer from "./Components/OfflineVideoPlayer";
 
 interface HeadMovementDataType {
   timestamp: number;
@@ -57,11 +62,16 @@ function VideoRecoderPage() {
   const [patientName, setPatientName] = useState("");
   const [gender, setGender] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [videoDetailToUpdate, setVideoDetailToUpdate] =
+    useState<IUpdateVideoDetailPayload | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const { isLive } = useVideoMode();
   const videoDivRef = useRef<HTMLDivElement>(null);
   const videoPlayerRef = useRef<ReactPlayer>(null);
   const accordianDivRef = useRef<HTMLDivElement>(null);
+  const [showNameError, setShowNameError] = useState(false);
+  const [showGenderError, setShowGenderError] = useState(false);
+  const { getVideosDetail } = useVideos();
 
   const toggleCard = () => {
     setIsAnnotationListOpen(false);
@@ -114,46 +124,83 @@ function VideoRecoderPage() {
       }
     }
   };
+
   const resetData = () => {
     if (imageDataLeft) manageStream();
     setLabelTimestamps([]);
     setStartTime(0);
     setStartAnnotatingTime(null);
     setHeadMovementData([]);
+    setVideoUrl("");
+    setVideoDetailToUpdate(null);
+    setPatientName("");
+    setGender("");
+    setDateOfBirth("");
+    setShowNameError(false);
+    setShowGenderError(false);
   };
 
   const saveData = async () => {
     try {
-      const payload = {
-        patientName,
-        gender,
-        dateOfBirth,
-        label: labelTimestamps,
-        headMovementData,
-        videoStartTime: startTime,
-      };
-      console.log(payload);
-      await saveVideoDetail(payload);
-      resetData();
+      if (!patientName.length || !gender.length) {
+        if (!patientName.length) setShowNameError(true);
+        if (!gender.length) setShowGenderError(true);
+        return;
+      }
+      if (isLive) {
+        const payload = {
+          patientName,
+          gender,
+          dateOfBirth,
+          label: labelTimestamps,
+          headMovementData,
+          videoStartTime: startTime,
+        };
+        await saveVideoDetailService(payload);
+        resetData();
+      } else {
+        if (videoDetailToUpdate) {
+          const payload = {
+            ...videoDetailToUpdate,
+            patientName,
+            gender,
+            dateOfBirth,
+            label: labelTimestamps,
+          };
+          await updateVideoDetailService(payload);
+          await getVideosDetail();
+        }
+      }
     } catch (e) {
       console.log("Error ::: ", e);
     }
   };
 
   const setVideoDetailOnClick = (videoDetail: VideoDetailType) => {
-    setVideoUrl(getSingleVideo(videoDetail.combinedVideo));
-
+    setVideoUrl(getSingleVideoService(videoDetail.combinedVideo));
     setGender(videoDetail.gender ?? "");
     setDateOfBirth(videoDetail.dateOfBirth ?? "");
     setPatientName(videoDetail.patientName);
     setLabelTimestamps(videoDetail.label);
     setStartTime(videoDetail.videoStartTime);
+    setVideoDetailToUpdate(videoDetail);
+    setShowNameError(false);
+    setShowGenderError(false);
     if (accordianDivRef.current) accordianDivRef.current.click();
     if (videoDivRef.current)
       videoDivRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
+  };
+
+  const deleteVideos = async (ids: string[]) => {
+    try {
+      await deleteVideoService(ids);
+      await getVideosDetail();
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   useEffect(() => {
@@ -204,6 +251,9 @@ function VideoRecoderPage() {
             setGender={setGender}
             dateOfBirth={dateOfBirth}
             setDateOfBirth={setDateOfBirth}
+            showNameError={showNameError}
+            showGenderError={showGenderError}
+            setShowGenderError={setShowGenderError}
           />
         </div>
 
@@ -212,32 +262,16 @@ function VideoRecoderPage() {
             <CenterDiv>
               <WidthDiv>
                 <VideoDataList
-                  videoStart={Date.now()}
                   setVideoUrl={setVideoDetailOnClick}
+                  deleteVideos={deleteVideos}
                 />
               </WidthDiv>
             </CenterDiv>
-            <CenterDiv>
-              <ReactPlayerContainer ref={videoDivRef}>
-                <BackButtonContainer>
-                  <Button
-                    size="sm"
-                    variant="shadow"
-                    color="default"
-                    radius="full"
-                  >
-                    ↩ close
-                  </Button>
-                </BackButtonContainer>
-                <ReactPlayer
-                  ref={videoPlayerRef}
-                  url={videoUrl}
-                  width={800}
-                  height={400}
-                  controls
-                />
-              </ReactPlayerContainer>
-            </CenterDiv>
+            <OfflineVideoPlayer
+              videoUrl={videoUrl}
+              videoRef={videoPlayerRef}
+              containerRef={videoDivRef}
+            />
           </div>
         ) : (
           ""
@@ -302,9 +336,7 @@ function VideoRecoderPage() {
                 color="success"
                 variant="flat"
                 onClick={saveData}
-                isDisabled={
-                  !startTime || !!imageDataLeft || labelTimestamps.length === 0
-                }
+                isDisabled={!startTime || !!imageDataLeft}
               >
                 Save
               </Button>

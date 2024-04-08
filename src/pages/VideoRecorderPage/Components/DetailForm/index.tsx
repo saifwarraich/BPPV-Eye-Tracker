@@ -11,11 +11,14 @@ import React from "react";
 interface DetailFormProps {
   isDisabled: boolean;
   patientName: string;
+  showNameError: boolean;
+  showGenderError: boolean;
   setPatientName: React.Dispatch<React.SetStateAction<string>>;
   gender: string;
   setGender: React.Dispatch<React.SetStateAction<string>>;
   dateOfBirth: string;
   setDateOfBirth: React.Dispatch<React.SetStateAction<string>>;
+  setShowGenderError: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function DetailForm({
@@ -23,9 +26,12 @@ function DetailForm({
   patientName,
   gender,
   dateOfBirth,
+  showNameError,
+  showGenderError,
   setPatientName,
   setGender,
   setDateOfBirth,
+  setShowGenderError,
 }: DetailFormProps) {
   return (
     <div>
@@ -48,6 +54,10 @@ function DetailForm({
               label="Name"
               variant="flat"
               isRequired
+              isInvalid={showNameError && !patientName.length}
+              errorMessage={
+                showNameError && !patientName.length ? "Please enter Name." : ""
+              }
               className="max-w-xs"
               value={patientName}
               onValueChange={setPatientName}
@@ -57,7 +67,6 @@ function DetailForm({
               label="Date of Birth"
               variant="flat"
               placeholder="Select Date of Birth"
-              isRequired
               className="max-w-xs"
               value={dateOfBirth}
               onValueChange={setDateOfBirth}
@@ -65,8 +74,14 @@ function DetailForm({
             <Select
               label="Gender"
               className="max-w-xs"
+              isRequired
+              isInvalid={showGenderError}
+              errorMessage={showGenderError ? "Please select gender." : ""}
               selectedKeys={[gender]}
-              onChange={(e) => setGender(e.target.value)}
+              onChange={(e) => {
+                setGender(e.target.value);
+                setShowGenderError(false);
+              }}
             >
               {GENDERS.map((gender) => (
                 <SelectItem key={gender.value} value={gender.value}>

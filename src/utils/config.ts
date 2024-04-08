@@ -13,6 +13,8 @@ const CONFIG = {
     SAVE_VIDEO: "/save-video",
     GET_ALL_VIDEOS_DETAIL: "/v1/video-detail/",
     GET_SINGLE_VIDEO: "/v1/video-detail/get-video",
+    UPDATE_VIDEO_DETAIL: "/v1/video-detail/",
+    DELETE_VIDEO_DETAIL: "/v1/video-detail/",
   },
 };
 

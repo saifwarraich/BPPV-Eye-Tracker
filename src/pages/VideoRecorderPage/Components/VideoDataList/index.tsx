@@ -1,4 +1,4 @@
-import { Key, useCallback, useEffect, useMemo, useState } from "react";
+import { Key, useCallback, useMemo, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -23,13 +23,13 @@ import { CameraIcon } from "../../../../assets/CameraIcon";
 import { VideoDetailType, useVideos } from "../../../../Context/VideoContext";
 
 interface AnnotationListProps {
-  videoStart: number;
   setVideoUrl: (videoDetail: VideoDetailType) => void;
+  deleteVideos: (ids: string[]) => void;
 }
 
 export default function VideoDataList({
-  videoStart,
   setVideoUrl,
+  deleteVideos,
 }: AnnotationListProps) {
   const columns = [
     { name: "NAME", uid: "name", sortable: true },
@@ -163,18 +163,6 @@ export default function VideoDataList({
     }
   }, []);
 
-  const onNextPage = useCallback(() => {
-    if (page < pages) {
-      setPage(page + 1);
-    }
-  }, [page, pages]);
-
-  const onPreviousPage = useCallback(() => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  }, [page]);
-
   const onRowsPerPageChange = useCallback((e: any) => {
     setRowsPerPage(Number(e.target.value));
     setPage(1);
@@ -253,6 +241,7 @@ export default function VideoDataList({
             <Button
               color="danger"
               endContent={<DeleteIcon />}
+              onClick={() => deleteVideos(Array.from(selectedKeys))}
               isDisabled={!Boolean(Array.from(selectedKeys).length)}
             >
               Delete
@@ -317,7 +306,14 @@ export default function VideoDataList({
         </div>
       </div>
     );
-  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
+  }, [
+    selectedKeys,
+    items.length,
+    page,
+    pages,
+    hasSearchFilter,
+    getVideosDetail,
+  ]);
 
   return (
     <Table

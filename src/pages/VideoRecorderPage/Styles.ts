@@ -42,11 +42,6 @@ export const CenterDiv = styled.div`
   align-items: center;
 `;
 
-export const ReactPlayerContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 export const BackButtonContainer = styled.div`
   margin-top: 5px;
   margin-bottom: 5px;

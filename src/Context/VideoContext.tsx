@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from "react";
-import { getVideosDetailReq } from "../services/videoService";
+import { getVideosDetailService } from "../services/videoService";
 
 export interface VideoDetailType {
   _id: string;
@@ -46,7 +46,7 @@ export const VideosContextProvider = ({
   const [videoDetails, setVideoDetails] = useState<VideoDetailType[]>([]);
 
   const getVideosDetail = async () => {
-    const allVideoDetails = await getVideosDetailReq();
+    const allVideoDetails = await getVideosDetailService();
     setVideoDetails(allVideoDetails);
   };
 
