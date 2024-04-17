@@ -10,9 +10,11 @@ const startingNumbers = Array(count)
 
 interface GraphsProps {
   data: number[];
+  xAngle: number;
+  yAngle: number;
 }
 
-const Graphs = ({ data }: GraphsProps) => {
+const Graphs = ({ data, xAngle, yAngle }: GraphsProps) => {
   // console.log("data", data);
   const [x_deg, setX_deg] = useState(0);
   const [y_deg, setY_deg] = useState(0);
@@ -100,13 +102,10 @@ const Graphs = ({ data }: GraphsProps) => {
 
   return (
     <div className="flex flex-col mt-10">
-      <div
-        className="flex justify-center gap-4 items-center mt-5"
-        // className={style.graphs}
-      >
+      {/* <div className="flex justify-center gap-4 items-center mt-5">
         <div className="text-center text-xl font-semibold">
           <p>Pitch</p>
-          <div style={{ transform: `rotate(${x_deg}deg)` }}>
+          <div style={{ transform: `rotate(${xAngle}deg)` }}>
             <div></div>
             <GraphImage
               className={"rounded-full !important"}
@@ -117,7 +116,7 @@ const Graphs = ({ data }: GraphsProps) => {
         </div>
         <div className="text-center text-xl font-semibold">
           <p>Roll</p>
-          <div style={{ transform: `rotate(${y_deg}deg)` }}>
+          <div style={{ transform: `rotate(${yAngle}deg)` }}>
             <div></div>
             <img
               className={"rounded-full !important"}
@@ -126,17 +125,7 @@ const Graphs = ({ data }: GraphsProps) => {
             />
           </div>
         </div>
-        {/* <div className="flex justify-center items-center flex-col gap-5 mb-[4cm] text-xl">
-          <p>Yaw</p>
-          <div
-            style={{ transform: `rotate(${z_deg}deg)` }}
-            className={style.xaxis}
-          >
-            <div className={style.zaxisAngle}></div>
-            <img className={style.image} src={xImg} alt="Z" />
-          </div> 
-        </div>*/}
-      </div>
+      </div> */}
       <CustomDivider />
       <div className="w-1/2 flex flex-col">
         <div className="w-1/3 text-center text-xl">

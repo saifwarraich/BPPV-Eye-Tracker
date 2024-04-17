@@ -42,6 +42,17 @@ export const CenterDiv = styled.div`
   align-items: center;
 `;
 
+export const FlexRowDiv = styled.div`
+  display: flex;
+  margin: 3rem;
+  justify-content: space-around;
+
+  @media (max-width: 1620px) {
+    flex-direction: column;
+    align-items: center; /* Optional: Centers items horizontally */
+  }
+`;
+
 export const BackButtonContainer = styled.div`
   margin-top: 5px;
   margin-bottom: 5px;

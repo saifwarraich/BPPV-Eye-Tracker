@@ -22,7 +22,6 @@ const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 console.log(VITE_DEV_SERVER_URL);
 
 function createWindow() {
-  console.log(process.env.VITE_PUBLIC);
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "camera.png"),
     width: 1024,
@@ -44,6 +43,7 @@ function createWindow() {
 
   win.webContents.openDevTools();
 
+  win.maximize();
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -90,13 +90,5 @@ app.on("before-quit", () => {
 app.setName("BPPV");
 
 app.whenReady().then(() => {
-  // const python = spawn("python3", ["../python/app.py"], { shell: true });
-  // python.stdout.on("data", (data: Buffer) => {
-  //   console.log("data: ", data.toString("utf8"));
-  // });
-
-  // python.stderr.on("data", (data: Buffer) => {
-  //   console.log(`stderr: ${data}`); // when error
-  // });
   createWindow();
 });

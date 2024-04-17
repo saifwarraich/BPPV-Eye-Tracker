@@ -13,6 +13,7 @@ import {
   DropdownItem,
   Input,
   Pagination,
+  useDisclosure,
 } from "@nextui-org/react";
 import { capitalize } from "../../../../utils/utils";
 import { BPPV_TYPES } from "../../../../utils/constants";
@@ -21,6 +22,7 @@ import { ChevronDownIcon } from "../../../../assets/ChevronDownIcon";
 import { DeleteIcon } from "../../../../assets/Delete";
 import { CameraIcon } from "../../../../assets/CameraIcon";
 import { VideoDetailType, useVideos } from "../../../../Context/VideoContext";
+import { DeleteModal } from "../DeleteModal";
 
 interface AnnotationListProps {
   setVideoUrl: (videoDetail: VideoDetailType) => void;
@@ -39,6 +41,7 @@ export default function VideoDataList({
   ];
 
   const { videoDetails, getVideosDetail } = useVideos();
+  const { onOpen, isOpen, onOpenChange } = useDisclosure();
 
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState("");
@@ -241,7 +244,7 @@ export default function VideoDataList({
             <Button
               color="danger"
               endContent={<DeleteIcon />}
-              onClick={() => deleteVideos(Array.from(selectedKeys))}
+              onPress={onOpen}
               isDisabled={!Boolean(Array.from(selectedKeys).length)}
             >
               Delete
@@ -295,12 +298,7 @@ export default function VideoDataList({
           onChange={setPage}
         />
         <div className="sm:flex w-[30%] justify-end gap-2">
-          <Button
-            isDisabled={pages === 1}
-            size="sm"
-            variant="flat"
-            onPress={getVideosDetail}
-          >
+          <Button size="sm" variant="flat" onPress={getVideosDetail}>
             🗘 Refresh
           </Button>
         </div>
@@ -316,38 +314,45 @@ export default function VideoDataList({
   ]);
 
   return (
-    <Table
-      aria-label="Example table with custom cells, pagination and sorting"
-      isHeaderSticky
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      classNames={{
-        wrapper: "max-h-[382px]",
-      }}
-      selectedKeys={selectedKeys}
-      selectionMode="multiple"
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSelectionChange={setSelectedKeys}
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn key={column.uid} align={"start"}>
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
-        {(item) => (
-          <TableRow key={item._id}>
-            {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+    <>
+      <DeleteModal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        onButtonPressed={() => deleteVideos(Array.from(selectedKeys))}
+      />
+      <Table
+        aria-label="Example table with custom cells, pagination and sorting"
+        isHeaderSticky
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px]",
+        }}
+        selectedKeys={selectedKeys}
+        selectionMode="multiple"
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={setSelectedKeys}
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn key={column.uid} align={"start"}>
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={"No users found"} items={sortedItems}>
+          {(item) => (
+            <TableRow key={item._id}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 }

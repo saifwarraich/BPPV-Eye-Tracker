@@ -1,7 +1,7 @@
 import React from "react";
 import { CenterDiv } from "../../Styles";
 import ReactPlayer from "react-player";
-import { ReactPlayerContainer } from "./Styles";
+import { PlayerPlaceholder, ReactPlayerContainer } from "./Styles";
 
 interface OfflineVideoPlayerProps {
   videoUrl: string;
@@ -17,23 +17,18 @@ const OfflineVideoPlayer: React.FC<OfflineVideoPlayerProps> = ({
   return (
     <CenterDiv>
       <ReactPlayerContainer ref={containerRef}>
-        {/* <BackButtonContainer>
-      <Button
-        size="sm"
-        variant="shadow"
-        color="default"
-        radius="full"
-      >
-        ↩ close
-      </Button>
-    </BackButtonContainer> */}
-        <ReactPlayer
-          ref={videoRef}
-          url={videoUrl}
-          width={800}
-          height={400}
-          controls
-        />
+        {videoUrl ? (
+          <ReactPlayer
+            ref={videoRef}
+            url={videoUrl}
+            width={800}
+            height={400}
+            controls
+            onProgress={() => console.log("called")}
+          />
+        ) : (
+          <PlayerPlaceholder src="/video-load-placeholder.svg" />
+        )}
       </ReactPlayerContainer>
     </CenterDiv>
   );

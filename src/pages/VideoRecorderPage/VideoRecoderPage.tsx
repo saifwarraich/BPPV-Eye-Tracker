@@ -11,7 +11,6 @@ import VideoPlayer from "./Components/VideoPlayer";
 import { useEffect, useRef, useState } from "react";
 import DetailForm from "./Components/DetailForm";
 import Graphs from "./Components/Graphs";
-import { socket } from "../../socket";
 import { BPPV_TYPES } from "../../utils/constants";
 import { ChevronDownIcon } from "../../assets/ChevronDownIcon";
 import AnnotationList from "./Components/AnnotationList";
@@ -42,14 +41,9 @@ import { useAlert } from "react-alert";
 import LoadingScreen from "../../components/LoadingScreen";
 import { getHeadMovementData } from "../../services/sensorService";
 import { GraphImage } from "./Components/Graphs/Styles";
+import { HeadMovementDataType } from ".";
 
-interface HeadMovementDataType {
-  timestamp: number;
-  sensorData: number[];
-  angleValues: number[];
-}
-
-function VideoRecoderPage() {
+export function VideoRecoderPage() {
   const [imageDataLeft, setImageDataLeft] = useState("");
   const [imageDataRight, setImageDataRight] = useState("");
   const [graphData, setGraphData] = useState([]);
@@ -237,10 +231,10 @@ function VideoRecoderPage() {
     const res = await getHeadMovementData();
     const data = res.data;
     setHeadMovementData((prev) => [...prev, data]);
-    // const newXAngle = Math.floor(data.angleValues[0] * 1);
-    // const newYAngle = Math.floor(data.angleValues[1] * 100);
+    const newXAngle = Math.floor(data.angleValues[0] * 1);
+    const newYAngle = Math.floor(data.angleValues[1] * 100);
     console.log(data.angleValues[0], data.angleValues[1]);
-    // console.log(newXAngle, newYAngle);
+    console.log(newXAngle, newYAngle);
     setXangle(data.angleValues[0]);
     setYangle(data.angleValues[1]);
     setGraphData(data.angleValues);
@@ -251,14 +245,11 @@ function VideoRecoderPage() {
   //     // Example: Generate random angles for demonstration
   //     const newXAngle = Math.random() * 360;
   //     const newYAngle = Math.random() * 360;
-
   //     setXangle(newXAngle);
   //     setYangle(newYAngle);
   //   }, 1000);
-
   //   return () => clearInterval(interval);
   // }, []);
-
   const manageStream = () => {
     if (!imageDataLeft) {
       setImageDataLeft(
@@ -526,5 +517,3 @@ function VideoRecoderPage() {
     </>
   );
 }
-
-export default VideoRecoderPage;

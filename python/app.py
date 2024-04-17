@@ -21,6 +21,7 @@ is_streaming_left = False
 detector = Detector2D()
 thread = None
 thread_lock = Lock()
+ser = None
 
 app = Flask(__name__)
 CORS(app)
@@ -33,16 +34,21 @@ def get_current_datetime():
     return current_time_milliseconds
 
 def background_thread():
+    global ser
+    if not ser:
+        try:
+            ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
+        except Exception as e:
+            print(e)
     print("Generating random sensor values")
-    while thread:
-        ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
+    while True:
         data = ser.readline()
         print("data")
         try:
             data = data.decode('ascii')
         except UnicodeDecodeError:
             data = "0 0 0 0 0 0"
-        print("here")
+        print("here", data)
         data_split = data.split()
 
         if len(data_split) >= 6 and data_split[0] != 'ACC_x':
@@ -82,21 +88,21 @@ def background_thread():
     
             socketio.emit('updateSensorData', {'angleValues': position_data, 'sensorData': sensor_data, 'timestamp': get_current_datetime()})
         socketio.sleep(1)
+    ser.close()
 
 @socketio.on('connect')
 def connect():
-    global thread
+    global thread, thread_lock
     print('Client connected')
 
-    global thread
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread)
 
 @socketio.on('disconnect')
 def disconnect():
-    print('Client disconnected',  request.sid)
     global thread
+    print('Client disconnected',  request.sid)
     with thread_lock:
         if thread is not None:
             thread = None
@@ -135,6 +141,61 @@ def join_videos(video1_path, video2_path, output_path):
     out.release()
     cv2.destroyAllWindows()
 
+@app.route('/sensor_data', methods=['GET'])
+def get_sensor_data():
+    global ser
+    if ser is None:
+        try:
+            ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
+        except Exception as e:
+            return "Can't Connect with Gyroscope", 400
+    while True:
+        data = ser.readline()
+        try:
+            data = data.decode('ascii')
+        except UnicodeDecodeError:
+            continue
+        print("here", data)
+        data_split = data.split()
+        if len(data_split) >= 6 and data_split[1] != 'ACC_y':
+
+            raw_accel_x  = float(data_split[0])
+            raw_accel_y  = float(data_split[1])
+            raw_accel_z  = float(data_split[2])
+            raw_gyro_x  = float(data_split[3])
+            raw_gyro_y  = float(data_split[4])
+            raw_gyro_z  = float(data_split[5])
+            
+
+            # Conversion to meaningful units
+            accel_x_g = raw_accel_x / ACCEL_SENSITIVITY
+            accel_y_g = raw_accel_y / ACCEL_SENSITIVITY
+            accel_z_g = raw_accel_z / ACCEL_SENSITIVITY
+            gyro_x_dps = raw_gyro_x / GYRO_SENSITIVITY
+            gyro_y_dps = raw_gyro_y / GYRO_SENSITIVITY
+            gyro_z_dps = raw_gyro_z / GYRO_SENSITIVITY
+
+            # Calculate pitch and roll angles using accelerometer data
+            pitch_rad = math.atan2(accel_x_g, math.sqrt(accel_y_g**2 + accel_z_g**2))
+            roll_rad = math.atan2(accel_y_g, math.sqrt(accel_x_g**2 + accel_z_g**2))
+            
+            # Convert angles from radians to degrees
+            pitch_deg = math.degrees(pitch_rad)
+            roll_deg = math.degrees(roll_rad)
+            
+            # Calculate yaw angle using gyroscope data (simplified integration)
+            delta_time = 1.0  # Example time interval between measurements (seconds)
+            gyro_x_rad = math.radians(gyro_x_dps)
+            yaw_rad = gyro_x_rad * delta_time 
+            
+            # Convert yaw angle from radians to degrees
+            yaw_deg = math.degrees(yaw_rad)
+
+            position_data = [-1*(pitch_deg+72), roll_deg , yaw_deg]
+            sensor_data = [raw_accel_x, raw_accel_y, raw_accel_z, raw_gyro_x, raw_gyro_y, raw_gyro_z]
+            return jsonify({'angleValues': position_data, 'sensorData': sensor_data, 'timestamp': get_current_datetime()})
+    return jsonify("abc")
+
 @app.route('/test')
 def hello():
     dev_list = uvc.device_list()
@@ -143,17 +204,14 @@ def hello():
 
 def draw_ellipse(frame: np.ndarray, ellipse: Dict, rgb: Tuple, thickness: float, draw_center: bool = False):
     try:
-        # draw the ellipse outline onto the input image
-        # note that cv2.ellipse() cannot deal with float values
-        # also it expects the axes to be semi-axes (half the size)
         cv2.ellipse(
             frame,
             tuple(int(v) for v in ellipse["center"]),
             tuple(int(v / 2) for v in ellipse["axes"]),
             ellipse["angle"],
-            0, 360,  # start/end angle for drawing
+            0, 360, 
             rgb,
-            thickness  # color (BGR): red
+            thickness
         )
         if draw_center:
             cv2.circle(frame, tuple(int(v) for v in ellipse["center"]), int(
@@ -251,10 +309,6 @@ def generate_frames_left():
 def gen_frame(capture):
     frame = capture.get_frame_robust()
     img = frame.img
-    # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # gray_BGR = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    # img = cv2.rotate(img, cv2.ROTATE_180)
-    # frame2display = cv2.rotate(frame2display, cv2.ROTATE_180)
     frame_detect_pupil = draw_detector(
             img)
     return frame_detect_pupil
@@ -275,15 +329,6 @@ def stop_video():
         is_streaming_left = False
         is_streaming_right = False
         time.sleep(1)
-        join_videos("./output_left_t.mp4", "./output_right_t.mp4", "./combined_video_t.mp4")
-        commands = [
-            ['ffmpeg', '-i', 'combined_video_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'combined_video.mp4'],
-            ['ffmpeg', '-i', 'output_left_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_left.mp4'],
-            ['ffmpeg', '-i', 'output_right_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_right.mp4']
-        ]
-        for command in commands:
-            subprocess.run(command)
-        time.sleep(3)
     return "True"
 
 @app.route("/save-video", methods=['POST'])
@@ -291,6 +336,15 @@ def save_video():
     data = request.json
     data["label"] = json.dumps([i for i in data["label"]])
     data["headMovementData"] = json.dumps([i for i in data["headMovementData"]])
+    join_videos("./output_left_t.mp4", "./output_right_t.mp4", "./combined_video_t.mp4")
+    commands = [
+        ['ffmpeg', '-i', 'combined_video_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'combined_video.mp4'],
+        ['ffmpeg', '-i', 'output_left_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_left.mp4'],
+        ['ffmpeg', '-i', 'output_right_t.mp4', '-c:v', 'libx264', '-c:a', 'aac', 'output_right.mp4']
+    ]
+    for command in commands:
+        subprocess.run(command)
+    time.sleep(3)
     files = {}
     file_path = "./output_left.mp4"
     with open(file_path, 'rb') as file:
@@ -311,8 +365,13 @@ def save_video():
             return jsonify(errors), 400
     except Exception as e:
         print(e)
-    return "done"
+        return "Something went wrong", 400
+    return "done", 200
 
 if __name__ == '__main__':
-    socketio.run(app, allow_unsafe_werkzeug=True)
-    # app.run()
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 115200, timeout=None)
+    except:
+        ser = None
+    # socketio.run(app, allow_unsafe_werkzeug=True)
+    app.run()

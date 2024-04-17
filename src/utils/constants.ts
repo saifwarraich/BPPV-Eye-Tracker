@@ -20,4 +20,12 @@ export const BPPV_TYPES = [
     label: "Type6: Right posterior canal BPPV",
     value: "right posterior canal bppv",
   },
+  {
+    label: "Type7: Hot Water in Right Ear",
+    value: "hot water in right ear",
+  },
+  {
+    label: "Type8: Hot Water in Left Ear",
+    value: "hot water in left ear",
+  },
 ];
