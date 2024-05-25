@@ -22,8 +22,10 @@ const LabelTimestampsContext = createContext<LabelTimestampsContextType>({
   removeLabelTimestamp: () => {},
 });
 
+// Custom hook for accessing the LabelTimestamps context
 export const useLabelTimestamps = () => useContext(LabelTimestampsContext);
 
+// Provides the context provider for label timestamps with state management functionality.
 export const LabelTimestampsProvider = ({
   children,
 }: {
@@ -33,6 +35,7 @@ export const LabelTimestampsProvider = ({
     []
   );
 
+  // Function to remove a label timestamp by its id
   const removeLabelTimestamp = (id: string) => {
     setLabelTimestamps((prevLabelTimestamps) =>
       prevLabelTimestamps.filter((item) => item.id !== id)

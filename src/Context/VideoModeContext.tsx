@@ -10,6 +10,7 @@ const VideoModeContext = createContext<VideoModeContextType>({
   toggleVideoMode: () => {},
 });
 
+// Hook for accessing the video mode context with safety checks.
 export const useVideoMode = () => {
   const context = useContext(VideoModeContext);
   if (!context) {
@@ -18,13 +19,15 @@ export const useVideoMode = () => {
   return context;
 };
 
+// Provider component that manages the state for video mode and exposes context.
 export const VideoModeContextProvider = ({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const [isLive, setIsLive] = useState<boolean>(true);
+  const [isLive, setIsLive] = useState<boolean>(true); // State to track whether video mode is live
 
+  // Function to toggle the current state of `isLive` between true and false
   const toggleVideoMode = () => {
     setIsLive((prevIsLive) => !prevIsLive);
   };

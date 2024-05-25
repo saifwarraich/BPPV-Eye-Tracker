@@ -36,8 +36,10 @@ const VideosContext = createContext<VideosContextType>({
   getVideosDetail: async () => {},
 });
 
+// Custom hook to provide easy access to the Videos context throughout the application.
 export const useVideos = () => useContext(VideosContext);
 
+// Context provider component that encapsulates the state management for video details and provides methods to manipulate it.
 export const VideosContextProvider = ({
   children,
 }: {
@@ -45,6 +47,7 @@ export const VideosContextProvider = ({
 }) => {
   const [videoDetails, setVideoDetails] = useState<VideoDetailType[]>([]);
 
+  // Asynchronous function that fetches video details using a service and updates the state.
   const getVideosDetail = async () => {
     const allVideoDetails = await getVideosDetailService();
     setVideoDetails(allVideoDetails);
