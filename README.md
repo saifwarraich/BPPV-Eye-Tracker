@@ -9,7 +9,7 @@ This project focuses on capturing videos along with head positions for analyzing
 - **Frontend**: Built using **Electron JS** and **React JS** for a interactive user interface.
 - **Video Processing**: Utilizes the **Pupil-UVC library** and **FFmpeg** in Python for efficient handling and processing of video streams.
 
-![Demo of Eye Tracker](public\bpp-demo.gif)
+![Demo of Eye Tracker](https://github.com/saifwarraich/BPPV/blob/main/public/bpp-demo.gif)
 
 ## Prerequisites
 
